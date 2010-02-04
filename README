@@ -14,6 +14,14 @@ To invoke:
 
 Will read holding register #5 and return the value.  You can also write to a holding register, or read input registers.
 
+You can also pass in a conversion function if you want to get back translated/non-numeric values:
+
+
+	int_to_bool(1) -> "true";
+	int_to_bool(0) -> "false".
+
+	Value = modbus_device:read_hreg(some_device, 5, fun int_to_bool/1).
+
 TODO:
 
 Read/write coils
