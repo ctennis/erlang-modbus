@@ -1,0 +1,22 @@
+This is an erlang modbus driver.  It allows you to communicate with remote modbus speaking devices using erlang via TCP sockets.
+
+Two types of devices are supported, Modbus RTU and Modbus TCP.  Modbus RTU is encapsulated over TCP to a remote device, using an ethernet to RS485 converter (I personally like the SENA PS110).
+
+Note that Modbus TCP and Modbus RTU-over-TCP have different message formatting requirements, hence you must specify whether you are connecting to an RTU client or a TCP client during the connect phase.
+
+Most Modbus TCP clients listen on port 502.  The SENA PS110 module I use for Ethernet-to-RS485 conversion listens on port 7001.
+
+To invoke:
+
+	modbus_device:connect(some_device, rtu, "10.0.0.1", 7001, 1),
+	Value = modbus_device:read_hreg(some_device, 5),
+	modbus_device:disconnect(some_device).
+
+Will read holding register #5 and return the value.  You can also write to a holding register, or read input registers.
+
+TODO:
+
+Read/write coils
+Better error handling
+More documentation.
+
