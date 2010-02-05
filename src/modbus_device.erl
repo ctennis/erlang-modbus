@@ -39,11 +39,16 @@ write_hreg(Device, Offset, Value) ->
 
 
 init([Type, Host, Port, DeviceAddr]) ->
-	% TODO: If we fail to connect, we should return {stop, Reason} from this function.
-	{ok, Sock} = gen_tcp:connect(Host, Port, [{active,false}, {packet, 0}]),
-	State = #modbus_state{type=Type,sock=Sock,device_address=DeviceAddr,tid=1},
-	{ok, State, 5000}.
+	Retval = gen_tcp:connect(Host, Port, [{active,false}, {packet, 0}]),
 
+	case Retval of
+		{ok, Sock} ->
+				State = #modbus_state{type=Type,sock=Sock,device_address=DeviceAddr,tid=1},
+				{ok, State, 5000};
+		{error,ErrorType} ->
+				{stop,{error,ErrorType}}
+	end.
+	
 handle_call({read_hreg_16, Offset}, _From, State) ->
 	Request = #rtu_request{address=State#modbus_state.device_address,function_code=?FC_READ_HREGS,start=Offset,data=1},
 	NewState = State#modbus_state{tid=State#modbus_state.tid + 1},
