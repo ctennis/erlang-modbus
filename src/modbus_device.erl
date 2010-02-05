@@ -39,9 +39,10 @@ write_hreg(Device, Offset, Value) ->
 
 
 init([Type, Host, Port, DeviceAddr]) ->
+	% TODO: If we fail to connect, we should return {stop, Reason} from this function.
 	{ok, Sock} = gen_tcp:connect(Host, Port, [{active,false}, {packet, 0}]),
 	State = #modbus_state{type=Type,sock=Sock,device_address=DeviceAddr,tid=1},
-	{ok, State}.
+	{ok, State, 5000}.
 
 handle_call({read_hreg_16, Offset}, _From, State) ->
 	Request = #rtu_request{address=State#modbus_state.device_address,function_code=?FC_READ_HREGS,start=Offset,data=1},
@@ -50,7 +51,7 @@ handle_call({read_hreg_16, Offset}, _From, State) ->
 
 	[FinalData] = bytes_to_words(Data),
 
-	{reply, FinalData, NewState};
+	{reply, FinalData, NewState, 5000};
 
 handle_call({read_ireg_16,Offset}, _From, State) ->
 	Request = #rtu_request{address=State#modbus_state.device_address,function_code=?FC_READ_IREGS,start=Offset,data=1},
@@ -59,7 +60,7 @@ handle_call({read_ireg_16,Offset}, _From, State) ->
 
 	[FinalData] = bytes_to_words(Data),
 
-	{reply, FinalData, NewState};
+	{reply, FinalData, NewState, 5000};
 
 handle_call({write_hreg_16,Offset,OrigData}, _From, State) ->
         Request = #rtu_request{address=State#modbus_state.device_address,function_code=?FC_WRITE_HREGS,start=Offset,data=OrigData},
@@ -69,14 +70,22 @@ handle_call({write_hreg_16,Offset,OrigData}, _From, State) ->
 
         [FinalData] = bytes_to_words(Data),
             
-        {reply, FinalData, NewState};
+        {reply, FinalData, NewState, 5000};
 
 handle_call(stop,_From,State) ->
 	gen_tcp:close(State#modbus_state.sock),
 	{stop, normal, stopped, State}.
 
 handle_cast(_From,State) -> {noreply, State}.
-handle_info(_From,State) -> {noreply, State}.
+
+% If we timeout, do a stop
+handle_info(timeout,State) ->
+	handle_call(stop,whocares,State),
+	{stop, normal, State}.
+
+terminate(_Reason,State) -> 
+	handle_call(stop,whocares,State).
+
 code_change(_OldVsn, State, _Extra) -> { ok, State }.
 
 send_and_receive(State,Request) ->
@@ -91,8 +100,6 @@ send_and_receive(State,Request) ->
 	ok = modbus:send_request_message(State,TheRequest),
 	ok = modbus:get_response_header(State,TheRequest),
 	{ok, _Data} = modbus:get_response_data(State,TheRequest).
-
-terminate(_Reason,_State) -> ok.
 
 % Take a list of modbus bytes, and convert it to a list of words.
 bytes_to_words([],Acc)->
