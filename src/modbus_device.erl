@@ -67,15 +67,18 @@ handle_call({read_ireg_16,Offset}, _From, State) ->
 
 	{reply, FinalData, NewState, 5000};
 
+handle_call({write_hreg_16,Offset,OrigData}, From, State) when is_integer(OrigData) ->
+	handle_call({write_hreg_16,Offset,[OrigData]}, From, State);
+
 handle_call({write_hreg_16,Offset,OrigData}, _From, State) ->
-        Request = #rtu_request{address=State#modbus_state.device_address,function_code=?FC_WRITE_HREGS,start=Offset,data=OrigData},
-        NewState = State#modbus_state{tid=State#modbus_state.tid + 1},
+	Request = #rtu_request{address=State#modbus_state.device_address,function_code=?FC_WRITE_HREGS,start=Offset,data=OrigData},
+	NewState = State#modbus_state{tid=State#modbus_state.tid + 1},
 
 	{ok, [_Address,_FunctionCode|Data]} = send_and_receive(NewState, Request),
 
-        [FinalData] = bytes_to_words(Data),
+	[FinalData] = bytes_to_words(Data),
             
-        {reply, FinalData, NewState, 5000};
+	{reply, FinalData, NewState, 5000};
 
 handle_call(stop,_From,State) ->
 	gen_tcp:close(State#modbus_state.sock),
