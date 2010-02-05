@@ -43,10 +43,10 @@ init([Type, Host, Port, DeviceAddr]) ->
 
 	case Retval of
 		{ok, Sock} ->
-				State = #modbus_state{type=Type,sock=Sock,device_address=DeviceAddr,tid=1},
-				{ok, State, 5000};
+			State = #modbus_state{type=Type,sock=Sock,device_address=DeviceAddr,tid=1},
+			{ok, State, 5000};
 		{error,ErrorType} ->
-				{stop,{error,ErrorType}}
+			{stop,{error,ErrorType}}
 	end.
 	
 handle_call({read_hreg_16, Offset}, _From, State) ->
