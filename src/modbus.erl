@@ -127,7 +127,7 @@ get_response_data(State, OriginalRequest) when is_record(OriginalRequest, rtu_re
 
 
 list_word16_to_binary(Values) when is_list(Values) ->
-	concat_binary([<<X:16>> || X <- Values]).
+	list_to_binary([<<X:16>> || X <- Values]).
 
 checksum(Data) when is_binary(Data)->
 	list_to_binary(checksum(binary_to_list(Data)));
