@@ -1,0 +1,8 @@
+{application, modbus,
+ [
+  {description, ""},
+  {vsn, git},
+  {registered, []},
+  {applications, []},
+  {env, []}
+ ]}.
