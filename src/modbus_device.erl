@@ -110,12 +110,8 @@ send_and_receive(State,Request) ->
 	{ok, _Data} = modbus:get_response_data(State,TheRequest).
 
 % Take a list of modbus bytes, and convert it to a list of words.
-bytes_to_words([],Acc)->
-  Acc;  
-bytes_to_words(Bytes,Acc) ->
-  Tail = lists:nthtail(2,Bytes),
-  Value = lists:nth(1, Bytes) * 256 + lists:nth(2,Bytes),
-  bytes_to_words(Tail,Acc ++ [Value]).
-bytes_to_words(Bytes) ->
-  bytes_to_words(Bytes,[]).
 
+bytes_to_words([]) ->
+  [];
+bytes_to_words([H, L | T]) ->
+  [H * 256 + L | bytes_to_words(T)].
